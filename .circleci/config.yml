@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: buhman/chicken:route-mux
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: |
+            csi -s tests/run.scm
