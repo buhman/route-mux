@@ -50,6 +50,10 @@
               (segments (maybe route-segments))
               (end (maybe route-separator))
               (_ end-of-input))
-    (if segments
-      (result (cons sep (append segments (list end))))
-      (result (list sep)))))
+    (cond
+     ((and (not segments) end)
+      (result #f))
+     (segments
+      (result (cons sep (append segments (list end)))))
+     (else
+      (result (list sep))))))

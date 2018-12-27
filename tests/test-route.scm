@@ -55,4 +55,16 @@
 
   (test "invalid parameter"
     #f
-    (parse route-uri "/a:b/")))
+    (parse route-uri "/a:b/"))
+
+  (test "invalid trailing separator"
+    #f
+    (parse route-uri "/a//"))
+
+  (test "invalid multiple separator"
+    #f
+    (parse route-uri "/a///b/"))
+
+  (test "invalid double root"
+    #f
+    (parse route-uri "//")))
