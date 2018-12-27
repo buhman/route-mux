@@ -51,4 +51,8 @@
 
   (test "invalid leading separator"
     #f
-    (parse route-uri "garbage")))
+    (parse route-uri "garbage"))
+
+  (test "invalid parameter"
+    #f
+    (parse route-uri "/a:b/")))
