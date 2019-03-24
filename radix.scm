@@ -1,6 +1,7 @@
 (import (chicken format)
         (srfi 13)
-        matchable)
+        matchable
+        (only vector-lib vector-unfold))
 
 ;; model
 
@@ -65,9 +66,28 @@
       ;; no match; there might be a better match
       #f))))
 
+(define (sorted-insert vec item cmp<)
+  (vector-unfold
+   (lambda (i found?)
+     (cond
+      (found?
+       (values (vector-ref vec (- i 1)) #t))
+      ((and (not (= (vector-length vec) i))
+            (cmp< (vector-ref vec i) item))
+       (values (vector-ref vec i) #f))
+      (else
+       (values item #t))))
+   (+ (vector-length vec) 1)
+   #f))
+
+(define (edge< a b)
+  (string< (edge-label a) (edge-label b)))
+
+(define (sorted-edge-insert vec item)
+  (sorted-insert vec item edge<))
+
 (define (node-insert! root key value)
-  (receive (parent-node new-suffix prefix-length common-edge)
-      (node-search root key)
+  (receive (parent-node new-suffix prefix-length common-edge) (node-search root key)
     (cond
      (common-edge
       ;; this is a partial match with a common edge
@@ -75,12 +95,9 @@
             (old-suffix (substring (edge-label common-edge) prefix-length))
             (old-node (edge-node common-edge)))
         (set! (edge-node common-edge)
-          (make-node #f
-            (list
-             (make-edge new-suffix
-               (make-node value '()))
-             (make-edge old-suffix
-               old-node))))
+          (let ((edges (sorted-edge-insert (vector (make-edge old-suffix old-node))
+                                           (make-edge new-suffix (make-node value #())))))
+            (make-node #f edges)))
         (set! (edge-label common-edge) common-prefix)))
      ;; this parent-node is the same node as this key
      ((= 0 (string-length new-suffix))
@@ -88,7 +105,6 @@
      ;; this is a new edge for this parent-node
      (else
       (set! (node-edges parent-node)
-        (cons
-         (make-edge new-suffix
-           (make-node value '()))
-         (node-edges parent-node)))))))
+        (sorted-edge-insert
+         (node-edges parent-node)
+         (make-edge new-suffix (make-node value #()))))))))
