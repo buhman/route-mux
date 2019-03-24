@@ -9,7 +9,7 @@
   node?
   ;; any
   (value node-value (setter node-value))
-  ;; '(edge ...)
+  ;; #(edge ...)
   (edges node-edges (setter node-edges)))
 
 (define-record-printer (node n out)
@@ -32,17 +32,22 @@
   (if (= 0 (string-length suffix))
     ;; empty suffix; no edges could possibly match
     (values node suffix 0 #f)
-    ;; search edges
-    (let loop ((edges (node-edges node)))
-      (match edges
-        (()
-         ;; none of the edges matched
-         (values node suffix 0 #f))
-        ((edge . rest)
-         (call/cc
-          (lambda (return)
-            (edge-match return suffix edge node)
-            (loop rest))))))))
+    ;; binary search edges
+    (let ((edges (node-edges node)))
+      (let loop ((start 0)
+                 (end (vector-length edges)))
+        (let ((index (quotient (+ start end) 2)))
+          (if (= start end)
+            ;; none of the edges matched
+            (values node suffix 0 #f)
+            ;;
+            (let ((edge (vector-ref edges index)))
+              (call/cc
+               (lambda (return)
+                 (edge-match return suffix edge node)
+                 (if (string< suffix (edge-label edge))
+                   (loop start index)
+                   (loop index end)))))))))))
 
 (define (edge-match return key edge parent-node)
   (let* ((label (edge-label edge))

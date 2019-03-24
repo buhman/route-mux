@@ -20,57 +20,60 @@
     (rubicon . 6)
     (rubicundus . 7)))
 
+(define vec-map (compose list->vector map))
+
+(define (compact-root->tree r)
+  (match r
+    ((value . edges)
+     (make-node value
+       (vec-map compact-edge->tree edges)))))
+
+(define (compact-edge->tree e)
+  (match e
+    ((label value . edges)
+     (make-edge label
+       (make-node value
+         (vec-map compact-edge->tree edges))))))
+
 (define +root+
-  (make-node #f
-    (list
-     (make-edge "r"
-       (make-node #f
-         (list
-          (make-edge "om"
-            (make-node #f
-              (list
-               (make-edge "an"
-                 (make-node #f
-                   (list
-                    (make-edge "e"
-                      (make-node 1 '()))
-                    (make-edge "us"
-                      (make-node 2 '())))))
-               (make-edge "ulus"
-                 (make-node 3 '())))))
-          (make-edge "ub"
-            (make-node #f
-              (list
-               (make-edge "e"
-                 (make-node #f
-                   (list
-                    (make-edge "ns"
-                      (make-node 4 '()))
-                    (make-edge "r"
-                      (make-node 5 '())))))
-               (make-edge "ic"
-                 (make-node #f
-                   (list
-                    (make-edge "on"
-                      (make-node 6 '()))
-                    (make-edge "undus"
-                      (make-node 7 '()))))))))))))))
+  (compact-root->tree
+   '(#f
+     ("r" #f
+      ("om" #f
+       ("an" #f
+        ("aa" 99)
+        ("e" 1)
+        ("gg" 99)
+        ("us" 2)
+        ("zz" 99))
+       ("ulus" 3))
+      ("ub" #f
+       ("e" #f
+        ("aa" 99)
+        ("ns" 4)
+        ("oo" 99)
+        ("pp" 99)
+        ("qq" 99)
+        ("r" 5)
+        ("zz" 99))
+       ("ic" #f
+        ("on" 6)
+        ("undus" 7)))))))
 
 (define +one-edge+
-  (make-node 1
-    (list
-     (make-edge "test"
-       (make-node 2 '())))))
+  (compact-root->tree
+   '(1
+     ("test" 2))))
 
 ;; tests
 
 (test-group "node-search"
   (test-values "edge-match complete"
-    (list (make-node 2 '()) "1234" 0 #f)
+    (list (make-node 2 #()) "1234" 0 #f)
     (node-search +one-edge+ "test1234"))
 
   (test-values "edge-match incomplete"
-    (list +one-edge+ "oast" 2 (make-edge "test" (make-node 2 '())))
+    (list +one-edge+ "oast" 2 (make-edge "test" (make-node 2 #())))
     (node-search +one-edge+ "teoast"))
 
   (test-values "edge-match none"
