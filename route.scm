@@ -45,6 +45,9 @@
                              (result '()))))
      (result (cons ps next)))))
 
+(define (listify s)
+  (if s (list s) '()))
+
 (define route-uri
   (sequence* ((sep route-separator)
               (segments (maybe route-segments))
@@ -54,6 +57,6 @@
      ((and (not segments) end)
       (result #f))
      (segments
-      (result (cons sep (append segments (list end)))))
+      (result (cons sep (append segments (listify end)))))
      (else
       (result (list sep))))))

@@ -5,61 +5,85 @@
 ;; model
 
 (define-record-type node
-  (make-node key value children)
+  (make-node value edges)
   node?
-  ;; string
-  (key node-key)
   ;; any
-  (value node-value)
-  ;; '(node ...)
-  (children node-children (setter node-children)))
+  (value node-value (setter node-value))
+  ;; '(edge ...)
+  (edges node-edges (setter node-edges)))
 
 (define-record-printer (node n out)
-  (fprintf out "#,(node ~s ~s ~s)" (node-key n) (node-value n) (node-children n)))
+  (fprintf out "#,(node ~s ~s)" (node-value n) (node-edges n)))
+
+(define-record-type edge
+  (make-edge label node)
+  edge?
+  ;; string
+  (label edge-label (setter edge-label))
+  ;; node
+  (node edge-node (setter edge-node)))
+
+(define-record-printer (edge e out)
+  (fprintf out "#,(edge ~s ~s)" (edge-label e) (edge-node e)))
 
 ;; api
 
-(define (prefix-match? node path index)
-  (let ((key (node-key node)))
+(define (node-search node suffix)
+  (if (= 0 (string-length suffix))
+    ;; empty suffix; no edges could possibly match
+    (values node suffix 0 #f)
+    ;; search edges
+    (let loop ((edges (node-edges node)))
+      (match edges
+        (()
+         ;; none of the edges matched
+         (values node suffix 0 #f))
+        ((edge . rest)
+         (call/cc
+          (lambda (return)
+            (edge-match return suffix edge node)
+            (loop rest))))))))
+
+(define (edge-match return key edge parent-node)
+  (let* ((label (edge-label edge))
+         (prefix-length (string-prefix-length label key))
+         (suffix (substring/shared key prefix-length)))
     (cond
-     ((string? key)
-      (let ((end (+ (string-length key) index))
-            (match? (string-prefix? key path 0 (string-length key) index)))
-        (values match? end #f)))
-     ;; a parameter; must be followed by a / or EOS
-     ((symbol? key)
-      (let* ((end (string-index path #\/ index))
-             (end (or end (string-length path)))
-             (param (substring/shared path index end))
-             (match? (not (= index end))))
-        (values match? end (cons key param))))
+     ((= prefix-length (string-length label))
+      ;; complete match; continue to next node
+      (call-with-values (lambda () (node-search (edge-node edge) suffix))
+        return))
+     ((< 0 prefix-length)
+      ;; incomplete match; no better matches are possible
+      (return parent-node suffix prefix-length edge))
      (else
-      (error "invalid radix key" key)))))
+      ;; no match; there might be a better match
+      #f))))
 
-(define-syntax values-or
-  (syntax-rules ()
-    ((_ a b)
-     (let-values (((a? a1) a)
-                  ((b? b1) b))
-       (if a?
-         (values a? a1)
-         (values b? b1))))))
-
-(define (node-search root path)
-  (let go ((index 0)
-           (node root)
-           (params '()))
-    (let-values (((match? end param) (prefix-match? node path index)))
-      (let ((params (if param (cons param params) params)))
-        (cond
-         ((not match?)
-          (values #f params))
-         ((= end (string-length path))
-          (values node params))
-         (else
-          (let loop ((children (node-children node)))
-            (match children
-              (() (values #f params))
-              ((child . rest)
-               (values-or (go end child params)
-                          (loop rest)))))))))))
+(define (node-insert! root key value)
+  (receive (parent-node new-suffix prefix-length common-edge)
+      (node-search root key)
+    (cond
+     (common-edge
+      ;; this is a partial match with a common edge
+      (let ((common-prefix (substring (edge-label common-edge) 0 prefix-length))
+            (old-suffix (substring (edge-label common-edge) prefix-length))
+            (old-node (edge-node common-edge)))
+        (set! (edge-node common-edge)
+          (make-node #f
+            (list
+             (make-edge new-suffix
+               (make-node value '()))
+             (make-edge old-suffix
+               old-node))))
+        (set! (edge-label common-edge) common-prefix)))
+     ;; this parent-node is the same node as this key
+     ((= 0 (string-length new-suffix))
+      (set! (node-value parent-node) value))
+     ;; this is a new edge for this parent-node
+     (else
+      (set! (node-edges parent-node)
+        (cons
+         (make-edge new-suffix
+           (make-node value '()))
+         (node-edges parent-node)))))))

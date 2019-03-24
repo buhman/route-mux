@@ -37,8 +37,7 @@
 
   (test "trailing separator"
     '((separator . "/")
-      (segment . "a")
-      #f)
+      (segment . "a"))
     (parse route-uri "/a"))
 
   (test "invalid whitespace"

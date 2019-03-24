@@ -1,4 +1,3 @@
-;;(import radix)
 (include "radix.scm")
 
 ;; test data
@@ -12,60 +11,73 @@
     (rubicon . 6)
     (rubicundus . 7)))
 
-(define +root+
-  (make-node "r" 'non-leaf
-             (list
-              (make-node "om" 'non-leaf
-                         (list
-                          (make-node "ulus" 3 '())
-                          (make-node "an" 'non-leaf
-                                     (list
-                                      (make-node "e" 1 '())
-                                      (make-node "us" 2 '())))))
-              (make-node "ub" 'non-leaf
-                         (list
-                          (make-node "e" 'non-leaf
-                                     (list
-                                      (make-node "ns" 4 '())
-                                      (make-node "r" 5 '())))
-                          (make-node "ic" 'non-leaf
-                                     (list
-                                      (make-node "on" 6 '())
-                                      (make-node "undus" 7 '()))))))))
+(define +names+
+  '((romane . 1)
+    (romanus . 2)
+    (romulus . 3)
+    (rubens . 4)
+    (ruber . 5)
+    (rubicon . 6)
+    (rubicundus . 7)))
 
-(define +blog-root+
-  (make-node "/" #t
-             (list
-              (make-node "s" #f
-                         (list
-                          (make-node "earch/" #t '())
-                          (make-node "upport/" #t '())))
-              (make-node "blog/" #t
-                         (list
-                          (make-node 'article #f
-                                     (list
-                                      (make-node "/" #t '())))))
-              (make-node "about-us/" #t
-                         (list
-                          (make-node "team/" #f '())))
-              (make-node "contact/" #t '()))))
+(define +root+
+  (make-node #f
+    (list
+     (make-edge "r"
+       (make-node #f
+         (list
+          (make-edge "om"
+            (make-node #f
+              (list
+               (make-edge "an"
+                 (make-node #f
+                   (list
+                    (make-edge "e"
+                      (make-node 1 '()))
+                    (make-edge "us"
+                      (make-node 2 '())))))
+               (make-edge "ulus"
+                 (make-node 3 '())))))
+          (make-edge "ub"
+            (make-node #f
+              (list
+               (make-edge "e"
+                 (make-node #f
+                   (list
+                    (make-edge "ns"
+                      (make-node 4 '()))
+                    (make-edge "r"
+                      (make-node 5 '())))))
+               (make-edge "ic"
+                 (make-node #f
+                   (list
+                    (make-edge "on"
+                      (make-node 6 '()))
+                    (make-edge "undus"
+                      (make-node 7 '()))))))))))))))
+
+(define +one-edge+
+  (make-node 1
+    (list
+     (make-edge "test"
+       (make-node 2 '())))))
 
 ;; tests
 
 (test-group "node-search"
-  (test-parameterize "sanity"
+  (test-values "edge-match complete"
+    (list (make-node 2 '()) "1234" 0 #f)
+    (node-search +one-edge+ "test1234"))
+
+  (test-values "edge-match incomplete"
+    (list +one-edge+ "oast" 2 (make-edge "test" (make-node 2 '())))
+    (node-search +one-edge+ "teoast"))
+
+  (test-values "edge-match none"
+    (list +one-edge+ "foo" 0 #f)
+    (node-search +one-edge+ "foo"))
+
+  (test-parameterize "node-search edge recursion"
     (romane romanus romulus rubens ruber rubicon rubicundus)
-    (lambda (s)
-      (alist-ref s +names+))
-    (lambda (s)
-      (node-value (node-search +root+ (symbol->string s)))))
-
-  (test-parameterize "non-leaf"
-    (r rom roman rub rube rubic)
-    (lambda (_) 'non-leaf)
-    (lambda (s)
-      (node-value (node-search +root+ (symbol->string s)))))
-
-  (test-values "params"
-    (list (make-node "/" #t '()) '((article . "foo")))
-    (node-search +blog-root+ "/blog/foo/")))
+    (lambda (s) (alist-ref s +names+))
+    (lambda (s) (node-value (node-search +root+ (symbol->string s))))))
