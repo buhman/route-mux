@@ -12,21 +12,6 @@
     (rubicon . 6)
     (rubicundus . 7)))
 
-(define vec-map (compose list->vector map))
-
-(define (compact-root->tree r)
-  (match r
-    ((value . edges)
-     (make-node value
-       (vec-map compact-edge->tree edges)))))
-
-(define (compact-edge->tree e)
-  (match e
-    ((label value . edges)
-     (make-edge label
-       (make-node value
-         (vec-map compact-edge->tree edges))))))
-
 (define +root+
   (compact-root->tree
    '(#f

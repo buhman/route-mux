@@ -5,6 +5,9 @@
    make-edge
    ;; selectors
    node-value
+   node-edges
+   edge-label
+   edge-node
    ;; predicates
    node?
    edge?
@@ -47,21 +50,26 @@
   (define-record-printer (edge e out)
     (fprintf out "#,(edge ~s ~s)" (edge-label e) (edge-node e)))
 
-  (define (edge-match return key edge parent-node)
-    (let* ((label (edge-label edge))
-           (prefix-length (string-prefix-length label key))
-           (suffix (substring/shared key prefix-length)))
-      (cond
-       ((= prefix-length (string-length label))
-        ;; complete match; continue to next node
-        (call-with-values (lambda () (node-search (edge-node edge) suffix))
-          return))
-       ((< 0 prefix-length)
-        ;; incomplete match; no better matches are possible
-        (return parent-node suffix prefix-length edge))
-       (else
-        ;; no match; there might be a better match
-        #f))))
+  (define (edge-match return edge key parent-node)
+    (let* ((label (edge-label edge)))
+      (if (not (string? label))
+        ;; this is a parameter edge; let the caller figure out what it wants to
+        ;; do with this
+        (return parent-node key 0 edge)
+        ;;
+        (let* ((prefix-length (string-prefix-length label key))
+               (suffix (substring/shared key prefix-length)))
+          (cond
+           ((= prefix-length (string-length label))
+            ;; complete match; continue to next node
+            (call-with-values (lambda () (node-search (edge-node edge) suffix))
+              return))
+           ((< 0 prefix-length)
+            ;; incomplete match; no better matches are possible
+            (return parent-node suffix prefix-length edge))
+           (else
+            ;; no match; there might be a better match
+            #f))))))
 
   (define (sorted-insert vec item cmp<)
     (vector-unfold
@@ -91,20 +99,22 @@
       (values node suffix 0 #f)
       ;; binary search edges
       (let ((edges (node-edges node)))
-        (let loop ((start 0)
+        (let loop ((last #f)
+                   (start 0)
                    (end (vector-length edges)))
           (let ((index (quotient (+ start end) 2)))
-            (if (= start end)
+            (if (or (= start end)
+                    (and last (= last index)))
               ;; none of the edges matched
               (values node suffix 0 #f)
               ;;
               (let ((edge (vector-ref edges index)))
                 (call/cc
                  (lambda (return)
-                   (edge-match return suffix edge node)
+                   (edge-match return edge suffix node)
                    (if (string< suffix (edge-label edge))
-                     (loop start index)
-                     (loop index end)))))))))))
+                     (loop index start index)
+                     (loop index index end)))))))))))
 
   (define (node-insert! root key value)
     (receive (parent-node new-suffix prefix-length common-edge) (node-search root key)

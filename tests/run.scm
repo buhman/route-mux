@@ -1,4 +1,6 @@
-(import test)
+(import test
+        matchable
+        (only (route-mux radix) make-node make-edge))
 
 (define-syntax test-values
   (syntax-rules ()
@@ -22,6 +24,22 @@
                     (test-name (string-append name " " (symbol->string (strip-syntax param)))))
                `(test ,test-name (,expect (quote ,param)) (,@body (quote ,param))))
              (loop (cdr ps))))))))))
+
+(define vec-map (compose list->vector map))
+
+;; edge labels *must* be pre-sorted
+(define (compact-root->tree r)
+  (match r
+    ((value . edges)
+     (make-node value
+       (vec-map compact-edge->tree edges)))))
+
+(define (compact-edge->tree e)
+  (match e
+    ((label value . edges)
+     (make-edge label
+       (make-node value
+         (vec-map compact-edge->tree edges))))))
 
 ;; tests
 
