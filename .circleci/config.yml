@@ -6,6 +6,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: build
+          command: |
+            csc -to-stdout -s route-mux.radix.scm -j route-mux.radix > /dev/null
+      - run:
           name: test
           command: |
             csi -s tests/run.scm
