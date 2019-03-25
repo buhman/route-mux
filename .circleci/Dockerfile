@@ -5,4 +5,5 @@ RUN chicken-install \
         srfi-13 \
         srfi-14 \
         matchable \
-        comparse
+        comparse \
+        vector-lib
