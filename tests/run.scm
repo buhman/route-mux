@@ -25,9 +25,13 @@
 
 ;; tests
 
+#;
 (test-group "radix"
   (include "tests/test-radix.scm"))
 
 #;
 (test-group "route"
   (include "tests/test-route.scm"))
+
+(test-group "path"
+  (include "tests/test-path.scm"))
