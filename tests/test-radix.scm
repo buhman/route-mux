@@ -1,4 +1,5 @@
-(include "radix.scm")
+(import (route-mux radix)
+        matchable)
 
 ;; test data
 
