@@ -17,6 +17,6 @@
                 edge-label edge-node
                 make-node
                 node-value node-edges
-                node-search node-insert!))
+                node-search node-insert-at!))
 
   (include "lib/path.scm"))

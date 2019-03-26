@@ -14,6 +14,7 @@
    ;; searching
    node-search
    ;; mutators
+   node-insert-at!
    node-insert!
    ;; internals
    sorted-insert

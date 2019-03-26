@@ -47,9 +47,28 @@
 
 ;; insert tests
 
-#;
-(define (test-path-insert))
+(define (test-path-insert path-pairs)
+  (let ((root (make-node #f #())))
+    (for-each
+     (lambda (pp)
+       (match pp
+         ((path . value)
+          (path-insert! root path value))))
+     path-pairs)
+    root))
 
-#;
-(test-group "path-insert!"
-  ())
+(define +route-table+
+  '((("/foo/" bar "/") . 1)
+    (("/spam/" eggs) . 2)
+    (("/spam/" eggs "/ham/") . 3)
+    (("/spam/" eggs "/bacon/") . 4)
+    (("/spam/" eggs "/ham/" sausage) . 5)))
+
+(test-group "path path-insert!"
+  (test "route-table"
+    +p-root+
+    (test-path-insert +route-table+))
+
+  (test "route-table reverse"
+    +p-root+
+    (test-path-insert (reverse +route-table+))))

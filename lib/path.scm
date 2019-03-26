@@ -71,7 +71,7 @@
          (cond
           ((not (= 0 (string-length suffix)))
            ;; partial match for this string part, insert it
-           (node-insert! new-node suffix #f)
+           (node-insert-at! new-node suffix prefix-length edge #f)
            (path-insert! node path value))
           (else
            ;; continue to next path component

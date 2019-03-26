@@ -88,25 +88,28 @@
                    (loop index start index)
                    (loop index index end)))))))))))
 
+(define (node-insert-at! parent-node new-suffix prefix-length common-edge value)
+  (cond
+   (common-edge
+    ;; this is a partial match with a common edge
+    (let ((common-prefix (substring (edge-label common-edge) 0 prefix-length))
+          (old-suffix (substring (edge-label common-edge) prefix-length))
+          (old-node (edge-node common-edge)))
+      (set! (edge-node common-edge)
+        (let ((edges (sorted-edge-insert (vector (make-edge old-suffix old-node))
+                                         (make-edge new-suffix (make-node value #())))))
+          (make-node #f edges)))
+      (set! (edge-label common-edge) common-prefix)))
+   ;; this parent-node is the same node as this key
+   ((= 0 (string-length new-suffix))
+    (set! (node-value parent-node) value))
+   ;; this is a new edge for this parent-node
+   (else
+    (set! (node-edges parent-node)
+      (sorted-edge-insert
+       (node-edges parent-node)
+       (make-edge new-suffix (make-node value #())))))))
+
 (define (node-insert! root key value)
   (receive (parent-node new-suffix prefix-length common-edge) (node-search root key)
-    (cond
-     (common-edge
-      ;; this is a partial match with a common edge
-      (let ((common-prefix (substring (edge-label common-edge) 0 prefix-length))
-            (old-suffix (substring (edge-label common-edge) prefix-length))
-            (old-node (edge-node common-edge)))
-        (set! (edge-node common-edge)
-          (let ((edges (sorted-edge-insert (vector (make-edge old-suffix old-node))
-                                           (make-edge new-suffix (make-node value #())))))
-            (make-node #f edges)))
-        (set! (edge-label common-edge) common-prefix)))
-     ;; this parent-node is the same node as this key
-     ((= 0 (string-length new-suffix))
-      (set! (node-value parent-node) value))
-     ;; this is a new edge for this parent-node
-     (else
-      (set! (node-edges parent-node)
-        (sorted-edge-insert
-         (node-edges parent-node)
-         (make-edge new-suffix (make-node value #()))))))))
+    (node-insert! parent-node new-suffix prefix-length common-edge value)))
