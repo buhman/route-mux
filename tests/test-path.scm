@@ -8,7 +8,7 @@
     (param . g) (separator . "/")
     (segment . "m") (segment . "n") (separator . "/")))
 
-(test-group "route-path"
+(test-group "path route-path"
   (test "route-path order"
     '("/ab/" f "/qr/" g "/mn/")
     (route->path +route+)))
@@ -27,7 +27,7 @@
          ("ham/" 3
           (sausage 5)))))))))
 
-(test-group "path-search"
+(test-group "path path-search"
   (test-values "one parameter"
     (list (make-node 1 #()) #t '((bar . "1234")))
     (path-search +p-root+ "/foo/1234/"))

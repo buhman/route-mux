@@ -61,7 +61,7 @@
 
 ;; tests
 
-(test-group "node-search"
+(test-group "radix node-search"
   (test-values "edge-match complete"
     (list (make-node 2 #()) "1234" 0 #f)
     (node-search +one-edge+ "test1234"))
@@ -91,7 +91,7 @@
      alist)
     root))
 
-(test-group "node-insert"
+(test-group "radix node-insert"
   (test "sorted-insert start"
     #(1 2 4 5)
     (sorted-insert #(2 4 5) 1 <))

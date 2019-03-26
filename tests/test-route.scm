@@ -3,7 +3,7 @@
 
 ;; tests
 
-(test-group "grammar"
+(test-group "route grammar"
   (test "root"
     '((separator . "/"))
     (parse route-uri "/"))
