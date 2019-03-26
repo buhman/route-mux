@@ -8,7 +8,9 @@ jobs:
       - run:
           name: build
           command: |
+            csc -to-stdout -s route-mux.route.scm -j route-mux.route > /dev/null
             csc -to-stdout -s route-mux.radix.scm -j route-mux.radix > /dev/null
+            csc -to-stdout -s route-mux.path.scm -j route-mux.path > /dev/null
       - run:
           name: test
           command: |
