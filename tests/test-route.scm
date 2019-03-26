@@ -1,4 +1,5 @@
-(include "route.scm")
+(import (route-mux route)
+        comparse)
 
 ;; tests
 

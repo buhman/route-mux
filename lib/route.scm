@@ -1,7 +1,3 @@
-(import (srfi 14)
-        comparse
-        matchable)
-
 (define char-set:rfc3968
   (char-set-union char-set:letter
                   char-set:digit
