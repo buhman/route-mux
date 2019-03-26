@@ -1,4 +1,4 @@
-(include "path.scm")
+(import (route-mux path))
 
 (define +route+
   '((separator . "/")

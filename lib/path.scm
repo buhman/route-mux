@@ -1,8 +1,3 @@
-(import (srfi 1)
-        (srfi 13)
-        matchable
-        (only (route-mux radix) node-search node-value node-edges edge-label edge-node make-edge make-node node-insert!))
-
 ;; aggregate parsed routes to a path
 (define (route->path-r route)
   (fold
@@ -56,7 +51,6 @@
      (cond
       ((symbol? p)
        (let ((edges (node-edges node)))
-         (print edges)
          (match edges
            (#()
             ;; make a new parameter edge
