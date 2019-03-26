@@ -43,11 +43,9 @@
 
 ;; tests
 
-#;
 (test-group "radix"
   (include "tests/test-radix.scm"))
 
-#;
 (test-group "route"
   (include "tests/test-route.scm"))
 
